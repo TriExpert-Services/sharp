@@ -19,6 +19,10 @@ services:
       - JPEG_QUALITY=85
       - PORT=3000
       - NODE_ENV=production
+      - JWT_SECRET=your-production-jwt-secret-change-this
+      - API_KEYS=secure-api-key-1,secure-api-key-2
+      - ADMIN_PASSWORD_HASH=$$2b$$10$$example.hash.change.this
+      - ALLOWED_ORIGINS=http://localhost:3000
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]

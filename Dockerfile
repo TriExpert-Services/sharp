@@ -30,7 +30,10 @@ RUN mkdir -p /app/input /app/output /tmp/uploads /tmp/converted
 # Crear usuario no-root para seguridad
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001 && \
-    chown -R nodejs:nodejs /app /tmp
+    chown -R nodejs:nodejs /app /tmp && \
+    mkdir -p /app/security && \
+COPY --chown=nodejs:nodejs converter.js server.js ./
+COPY --chown=nodejs:nodejs security/ ./security/
 
 # Cambiar a usuario no-root
 USER nodejs
