@@ -1,15 +1,15 @@
 {
   "name": "heic-to-jpeg-converter",
   "version": "1.0.0",
-  "description": "Docker container to convert HEIC files to JPEG",
-  "main": "converter.js",
+  "description": "Docker container to convert HEIC files to JPEG for n8n integration",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "convert": "node converter.js",
-    "server": "node server.js",
     "dev": "node server.js",
+    "convert": "node converter.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "dependencies": {
     "express": "^4.18.2",
     "fs-extra": "^11.1.1",
     "multer": "^1.4.5-lts.1",
@@ -20,8 +20,12 @@
     "jpeg",
     "converter",
     "docker",
+    "n8n",
     "image"
   ],
   "author": "HEIC to JPEG Converter",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

@@ -2,14 +2,17 @@ version: '3.8'
 
 services:
   heic-converter:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: heic-to-jpeg-converter
     ports:
       - "3000:3000"
     volumes:
       - ./input:/app/input
       - ./output:/app/output
-      - ./temp:/tmp
+      - temp_uploads:/tmp/uploads
+      - temp_converted:/tmp/converted
     environment:
       - INPUT_DIR=/app/input
       - OUTPUT_DIR=/app/output
@@ -17,11 +20,20 @@ services:
       - PORT=3000
       - NODE_ENV=production
     restart: unless-stopped
-    command: ["node", "server.js"]
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - heic-network
 
-  # Versión para usar como herramienta de línea de comandos
+  # Versión CLI para conversiones por lotes
   heic-converter-cli:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     container_name: heic-converter-cli
     volumes:
       - ./input:/app/input
@@ -31,6 +43,16 @@ services:
       - OUTPUT_DIR=/app/output
       - JPEG_QUALITY=90
       - NODE_ENV=production
+    command: ["node", "converter.js"]
     profiles:
       - cli
-    command: ["node", "converter.js"]
+    networks:
+      - heic-network
+
+volumes:
+  temp_uploads:
+  temp_converted:
+
+networks:
+  heic-network:
+    driver: bridge
