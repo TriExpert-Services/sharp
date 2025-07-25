@@ -30,120 +30,130 @@ const upload = multer({
   }
 });
 
+app.use(express.static('public'));
 app.use(express.json());
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    message: 'HEIC to JPEG Converter API is running',
-    timestamp: new Date().toISOString()
-  });
-});
-
-// API info endpoint
+// Página principal
 app.get('/', (req, res) => {
-  res.json({
-    service: 'HEIC to JPEG Converter API',
-    version: '1.0.0',
-    endpoints: {
-      'GET /health': 'Health check',
-      'POST /convert': 'Convert HEIC file to JPEG (multipart/form-data with "file" field)',
-      'GET /download/:filename': 'Download converted file'
-    },
-    usage: 'Send POST request to /convert with HEIC file in "file" field'
-  });
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>HEIC to JPEG Converter</title>
+        <style>
+            body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+            .upload-area { border: 2px dashed #ccc; padding: 40px; text-align: center; margin: 20px 0; }
+            .upload-area:hover { border-color: #007bff; }
+            button { background: #007bff; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+            button:hover { background: #0056b3; }
+            .result { margin: 20px 0; padding: 15px; border-radius: 5px; }
+            .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+            .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+        </style>
+    </head>
+    <body>
+        <h1>🔄 HEIC to JPEG Converter</h1>
+        <p>Upload your HEIC/HEIF files and convert them to JPEG format.</p>
+        
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="upload-area">
+                <input type="file" id="fileInput" name="files" multiple accept=".heic,.heif" style="display: none;">
+                <button type="button" onclick="document.getElementById('fileInput').click()">
+                    📁 Select HEIC Files
+                </button>
+                <p>or drag and drop files here</p>
+            </div>
+            <button type="submit">🚀 Convert to JPEG</button>
+        </form>
+        
+        <div id="result"></div>
+
+        <script>
+            const form = document.getElementById('uploadForm');
+            const fileInput = document.getElementById('fileInput');
+            const result = document.getElementById('result');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = new FormData();
+                const files = fileInput.files;
+                
+                if (files.length === 0) {
+                    result.innerHTML = '<div class="result error">Please select files first!</div>';
+                    return;
+                }
+
+                for (let file of files) {
+                    formData.append('files', file);
+                }
+
+                try {
+                    result.innerHTML = '<div class="result">🔄 Converting files...</div>';
+                    
+                    const response = await fetch('/convert', {
+                        method: 'POST',
+                        body: formData
+                    });
+
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        result.innerHTML = \`<div class="result success">
+                            ✅ Successfully converted \${data.successCount} files!<br>
+                            <a href="/download/\${data.zipFile}" download>📥 Download ZIP</a>
+                        </div>\`;
+                    } else {
+                        result.innerHTML = \`<div class="result error">❌ Error: \${data.error}</div>\`;
+                    }
+                } catch (error) {
+                    result.innerHTML = \`<div class="result error">❌ Error: \${error.message}</div>\`;
+                }
+            });
+        </script>
+    </body>
+    </html>
+  `);
 });
 
-// Convert endpoint for n8n
-app.post('/convert', upload.single('file'), async (req, res) => {
+// Endpoint para conversión
+app.post('/convert', upload.array('files', 10), async (req, res) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ 
-        error: 'No file uploaded. Please send a HEIC/HEIF file in the "file" field.' 
-      });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'No files uploaded' });
     }
 
     const converter = new HEICConverter();
-    const outputFileName = req.file.filename.replace(/\.(heic|heif)$/i, '.jpg');
-    const outputDir = '/tmp/converted';
-    await fs.ensureDir(outputDir);
-    const outputPath = path.join(outputDir, outputFileName);
-    
-    const success = await converter.convertSingleFile(req.file.path, outputPath);
-    
-    if (success) {
-      // Leer el archivo convertido y enviarlo como base64
-      const convertedBuffer = await fs.readFile(outputPath);
+    const convertedFiles = [];
+    let successCount = 0;
+
+    for (const file of req.files) {
+      const outputFileName = file.filename.replace(/\.(heic|heif)$/i, '.jpg');
+      const outputPath = path.join('/tmp/converted', outputFileName);
       
-      res.json({
-        success: true,
-        message: 'File converted successfully',
-        originalName: req.file.originalname,
-        convertedName: outputFileName,
-        size: convertedBuffer.length,
-        downloadUrl: `/download/${outputFileName}`,
-        base64: convertedBuffer.toString('base64'),
-        mimeType: 'image/jpeg'
-      });
-
-      // Limpiar archivos temporales después de un tiempo
-      setTimeout(async () => {
-        try {
-          await fs.remove(req.file.path);
-          await fs.remove(outputPath);
-        } catch (err) {
-          console.log('Cleanup error:', err.message);
-        }
-      }, 300000); // 5 minutos
-
-    } else {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to convert file'
-      });
+      const success = await converter.convertSingleFile(file.path, outputPath);
+      if (success) {
+        convertedFiles.push(outputPath);
+        successCount++;
+      }
     }
+
+    // Crear ZIP con archivos convertidos (opcional)
+    const zipFile = `converted-${Date.now()}.zip`;
+    
+    res.json({
+      success: true,
+      successCount,
+      totalFiles: req.files.length,
+      zipFile: zipFile
+    });
 
   } catch (error) {
     console.error('Conversion error:', error);
-    res.status(500).json({ 
-      success: false,
-      error: error.message 
-    });
-  }
-});
-
-// Download endpoint
-app.get('/download/:filename', async (req, res) => {
-  try {
-    const filename = req.params.filename;
-    const filePath = path.join('/tmp/converted', filename);
-    
-    if (await fs.pathExists(filePath)) {
-      res.setHeader('Content-Type', 'image/jpeg');
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.sendFile(filePath);
-    } else {
-      res.status(404).json({ error: 'File not found' });
-    }
-  } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-// Error handler
-app.use((error, req, res, next) => {
-  if (error instanceof multer.MulterError) {
-    if (error.code === 'LIMIT_FILE_SIZE') {
-      return res.status(400).json({ error: 'File too large' });
-    }
-  }
-  
-  res.status(500).json({ error: error.message });
-});
-
 app.listen(port, '0.0.0.0', () => {
-  console.log(`🌐 HEIC to JPEG API running on http://0.0.0.0:${port}`);
-  console.log(`📡 Ready for n8n requests`);
-  console.log(`🔗 Health check: http://0.0.0.0:${port}/health`);
+  console.log(`🌐 HEIC to JPEG Converter server running on http://0.0.0.0:${port}`);
 });
