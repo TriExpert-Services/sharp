@@ -10,7 +10,7 @@
   "port": 3000,
   "env": {
     "NODE_ENV": "production",
-    "PORT": "3000",
+    "PORT": "4545",
     "JWT_SECRET": "${JWT_SECRET}",
     "API_KEYS": "${API_KEYS}",
     "ADMIN_PASSWORD_HASH": "${ADMIN_PASSWORD_HASH}",

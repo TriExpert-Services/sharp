@@ -46,11 +46,11 @@ USER nodejs
 RUN node -e "console.log('Sharp version:', require('sharp').format)"
 
 # Exponer puerto
-EXPOSE 3000
+EXPOSE 4545
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:4545/health || exit 1
 
 # Comando por defecto
 CMD ["node", "server.js"]

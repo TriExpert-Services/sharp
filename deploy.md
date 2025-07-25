@@ -50,7 +50,7 @@ git push origin main
 
 ### 3. Despliegue
 1. Clic en "Deploy"
-2. Verificar logs de construcción
+  - `ALLOWED_ORIGINS`: Dominios permitidos para CORS
 3. Probar endpoint `/health`
 
 ---

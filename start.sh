@@ -36,5 +36,5 @@ node -e "const sharp = require('sharp'); console.log('Sharp version:', sharp.ver
 echo "✅ Sharp verified successfully"
 
 # Iniciar servidor
-echo "🚀 Starting server on port ${PORT:-3000}..."
+echo "🚀 Starting server on port ${PORT:-4545}..."
 exec node server.js

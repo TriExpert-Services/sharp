@@ -76,7 +76,7 @@ docker run --rm \
 | `INPUT_DIR` | Directorio de archivos HEIC | `/app/input` |
 | `OUTPUT_DIR` | Directorio de salida JPEG | `/app/output` |
 | `JPEG_QUALITY` | Calidad JPEG (1-100) | `85` |
-| `PORT` | Puerto del servidor web | `3000` |
+| `PORT` | Puerto del servidor web | `4545` |
 
 ## 📂 Estructura de Directorios
 

@@ -60,7 +60,7 @@
         "ports": [
           {
             "published": 80,
-            "target": 3000,
+            "target": 4545,
             "protocol": "tcp"
           }
         ],
