@@ -77,7 +77,7 @@ output/*
 temp/*
 
 # Lock files (will be generated in container)
-package-lock.json
+#package-lock.json
 yarn.lock
 
 # Test files
