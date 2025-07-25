@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  heic-converter:
+    build: .
+    container_name: heic-to-jpeg-converter
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./input:/app/input
+      - ./output:/app/output
+      - ./temp:/tmp
+    environment:
+      - INPUT_DIR=/app/input
+      - OUTPUT_DIR=/app/output
+      - JPEG_QUALITY=85
+      - PORT=3000
+    restart: unless-stopped
+
+  # Versión para usar como herramienta de línea de comandos
+  heic-converter-cli:
+    build: .
+    container_name: heic-converter-cli
+    volumes:
+      - ./input:/app/input
+      - ./output:/app/output
+    environment:
+      - INPUT_DIR=/app/input
+      - OUTPUT_DIR=/app/output
+      - JPEG_QUALITY=90
+    profiles:
+      - cli
