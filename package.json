@@ -11,11 +11,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "sharp": "^0.32.6",
+    "archiver": "^6.0.2",
     "express": "^4.18.2",
-    "multer": "^1.4.5-lts.1",
     "fs-extra": "^11.1.1",
-    "archiver": "^6.0.1"
+    "multer": "^1.4.5-lts.1",
+    "sharp": "^0.32.6"
   },
   "keywords": [
     "heic",
