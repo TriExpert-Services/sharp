@@ -1,0 +1,46 @@
+{
+  "name": "HEIC to JPEG Converter",
+  "description": "Secure HEIC to JPEG converter with API authentication",
+  "repository": "https://github.com/tu-repo/heic-converter",
+  "logo": "https://via.placeholder.com/128x128/007bff/ffffff?text=HEIC",
+  "keywords": ["heic", "jpeg", "converter", "api", "docker"],
+  "success_url": "/",
+  "env": {
+    "JWT_SECRET": {
+      "description": "Secret key for JWT tokens",
+      "generator": "secret",
+      "required": true
+    },
+    "API_KEYS": {
+      "description": "Comma-separated list of valid API keys",
+      "value": "your-secure-api-key-here",
+      "required": true
+    },
+    "ADMIN_PASSWORD_HASH": {
+      "description": "Bcrypt hash of admin password",
+      "value": "$2b$10$rOmKvKwPnwpqZIbS5J8jf.Xo9QKQmKqE1nFv8XjGfKmYuXzP2Wq5u",
+      "required": true
+    },
+    "ALLOWED_ORIGINS": {
+      "description": "Comma-separated list of allowed CORS origins",
+      "value": "https://yourdomain.com",
+      "required": false
+    },
+    "JPEG_QUALITY": {
+      "description": "JPEG quality (1-100)",
+      "value": "85",
+      "required": false
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
+}

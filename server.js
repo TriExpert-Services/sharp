@@ -30,8 +30,21 @@ app.use(helmet({
 }));
 
 // CORS con configuración segura
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim())
+  : ['http://localhost:3000'];
+
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (aplicaciones móviles, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
   optionsSuccessStatus: 200
 }));
@@ -549,7 +562,7 @@ app.use('*', (req, res) => {
 });
 
 // Inicializar servidor
-app.listen(port, '0.0.0.0', () => {
+const server = app.listen(port, '0.0.0.0', () => {
   ensureDirectories().catch(console.error);
   console.log(`🔒 Secure HEIC to JPEG Converter running on http://0.0.0.0:${port}`);
   console.log(`🔑 Security features enabled:`);
@@ -560,4 +573,19 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`   - Event Logging`);
   console.log(`📊 Admin panel: http://0.0.0.0:${port}/ (admin tab)`);
   console.log(`🏥 Health check: http://0.0.0.0:${port}/health`);
+});
+
+// Manejo de cierre graceful
+process.on('SIGTERM', () => {
+  console.log('🔄 SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    console.log('✅ Process terminated');
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('🔄 SIGINT received, shutting down gracefully');
+  server.close(() => {
+    console.log('✅ Process terminated');
+  });
 });

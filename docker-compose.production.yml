@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  heic-converter:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: heic-converter-prod
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - ./input:/app/input
+      - ./output:/app/output
+      - temp_uploads:/tmp/uploads
+      - temp_converted:/tmp/converted
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=${JWT_SECRET}
+      - API_KEYS=${API_KEYS}
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - INPUT_DIR=/app/input
+      - OUTPUT_DIR=/app/output
+      - JPEG_QUALITY=${JPEG_QUALITY:-85}
+      - PORT=3000
+      - CONVERT_RATE_LIMIT=${CONVERT_RATE_LIMIT:-20}
+      - GENERAL_RATE_LIMIT=${GENERAL_RATE_LIMIT:-100}
+      - LOGIN_RATE_LIMIT=${LOGIN_RATE_LIMIT:-5}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-15}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - heic-network
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '0.5'
+
+volumes:
+  temp_uploads:
+  temp_converted:
+
+networks:
+  heic-network:
+    driver: bridge

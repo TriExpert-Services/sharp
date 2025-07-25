@@ -1,0 +1,77 @@
+{
+  "name": "heic-converter",
+  "services": [
+    {
+      "type": "app",
+      "data": {
+        "projectName": "heic-converter",
+        "serviceName": "web",
+        "source": {
+          "type": "docker",
+          "image": "heic-converter:latest"
+        },
+        "deploy": {
+          "replicas": 1,
+          "command": null,
+          "zeroDowntime": true
+        },
+        "env": [
+          {
+            "key": "NODE_ENV",
+            "value": "production"
+          },
+          {
+            "key": "PORT",
+            "value": "3000"
+          },
+          {
+            "key": "JWT_SECRET",
+            "value": "${JWT_SECRET}"
+          },
+          {
+            "key": "API_KEYS",
+            "value": "${API_KEYS}"
+          },
+          {
+            "key": "ADMIN_PASSWORD_HASH",
+            "value": "${ADMIN_PASSWORD_HASH}"
+          },
+          {
+            "key": "ALLOWED_ORIGINS",
+            "value": "${ALLOWED_ORIGINS}"
+          },
+          {
+            "key": "JPEG_QUALITY",
+            "value": "85"
+          }
+        ],
+        "mounts": [
+          {
+            "type": "volume",
+            "name": "uploads",
+            "mountPath": "/tmp/uploads"
+          },
+          {
+            "type": "volume",
+            "name": "converted",
+            "mountPath": "/tmp/converted"
+          }
+        ],
+        "ports": [
+          {
+            "published": 80,
+            "target": 3000,
+            "protocol": "tcp"
+          }
+        ],
+        "domains": [
+          {
+            "host": "your-domain.com",
+            "port": 80,
+            "https": true
+          }
+        ]
+      }
+    }
+  ]
+}

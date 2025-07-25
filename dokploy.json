@@ -1,0 +1,46 @@
+{
+  "version": "1.0",
+  "name": "heic-converter",
+  "description": "HEIC to JPEG Converter with API authentication",
+  "type": "docker",
+  "docker": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "port": 3000,
+  "env": {
+    "NODE_ENV": "production",
+    "PORT": "3000",
+    "JWT_SECRET": "${JWT_SECRET}",
+    "API_KEYS": "${API_KEYS}",
+    "ADMIN_PASSWORD_HASH": "${ADMIN_PASSWORD_HASH}",
+    "ALLOWED_ORIGINS": "${ALLOWED_ORIGINS}",
+    "JPEG_QUALITY": "85",
+    "INPUT_DIR": "/app/input",
+    "OUTPUT_DIR": "/app/output",
+    "CONVERT_RATE_LIMIT": "20",
+    "GENERAL_RATE_LIMIT": "100",
+    "LOGIN_RATE_LIMIT": "5",
+    "RATE_LIMIT_WINDOW": "15"
+  },
+  "volumes": [
+    {
+      "host": "./input",
+      "container": "/app/input"
+    },
+    {
+      "host": "./output",
+      "container": "/app/output"
+    }
+  ],
+  "healthcheck": {
+    "path": "/health",
+    "interval": 30,
+    "timeout": 10,
+    "retries": 3
+  },
+  "resources": {
+    "memory": "1024Mi",
+    "cpu": "500m"
+  }
+}
