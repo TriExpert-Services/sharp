@@ -10,7 +10,7 @@ const security = require('./security/auth');
 const { convertLimiter, generalLimiter, loginLimiter } = require('./security/rateLimiter');
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 4545;
 
 // Configuración de seguridad
 app.use(helmet({
