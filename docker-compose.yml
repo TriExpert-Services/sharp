@@ -15,7 +15,9 @@ services:
       - OUTPUT_DIR=/app/output
       - JPEG_QUALITY=85
       - PORT=3000
+      - NODE_ENV=production
     restart: unless-stopped
+    command: ["node", "server.js"]
 
   # Versión para usar como herramienta de línea de comandos
   heic-converter-cli:
@@ -28,5 +30,7 @@ services:
       - INPUT_DIR=/app/input
       - OUTPUT_DIR=/app/output
       - JPEG_QUALITY=90
+      - NODE_ENV=production
     profiles:
       - cli
+    command: ["node", "converter.js"]

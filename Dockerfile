@@ -8,7 +8,8 @@ RUN apk add --no-cache \
     x265-dev \
     python3 \
     make \
-    g++
+    g++ \
+    && rm -rf /var/cache/apk/*
 
 # Crear directorio de trabajo
 WORKDIR /app
@@ -17,16 +18,23 @@ WORKDIR /app
 COPY package*.json ./
 
 # Instalar dependencias de Node.js
-RUN npm install
+RUN npm ci --only=production && npm cache clean --force
 
 # Copiar el código fuente
 COPY . .
 
 # Crear directorios para input y output
-RUN mkdir -p /app/input /app/output
+RUN mkdir -p /app/input /app/output /tmp/uploads /tmp/converted /tmp/downloads
 
 # Exponer puerto (opcional, para API web)
 EXPOSE 3000
 
+# Crear usuario no-root para seguridad
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001 && \
+    chown -R nodejs:nodejs /app /tmp
+
+USER nodejs
+
 # Comando por defecto
-CMD ["node", "converter.js"]
+CMD ["node", "server.js"]

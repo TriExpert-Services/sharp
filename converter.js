@@ -6,25 +6,64 @@ class HEICConverter {
   constructor() {
     this.inputDir = process.env.INPUT_DIR || '/app/input';
     this.outputDir = process.env.OUTPUT_DIR || '/app/output';
-    this.quality = parseInt(process.env.JPEG_QUALITY) || 85;
+    this.quality = this.validateQuality(parseInt(process.env.JPEG_QUALITY) || 85);
+  }
+
+  validateQuality(quality) {
+    if (isNaN(quality) || quality < 1 || quality > 100) {
+      console.warn(`⚠️ Invalid quality ${quality}, using default 85`);
+      return 85;
+    }
+    return quality;
+  }
+
+  async validateInputFile(inputPath) {
+    try {
+      const stats = await fs.stat(inputPath);
+      if (!stats.isFile()) {
+        throw new Error('Path is not a file');
+      }
+      
+      // Verificar que el archivo tenga extensión HEIC/HEIF
+      if (!/\.(heic|heif)$/i.test(inputPath)) {
+        throw new Error('File is not a HEIC/HEIF file');
+      }
+      
+      return true;
+    } catch (error) {
+      throw new Error(`Invalid input file: ${error.message}`);
+    }
   }
 
   async convertFile(inputPath, outputPath) {
     try {
+      // Validar archivo de entrada
+      await this.validateInputFile(inputPath);
+      
+      // Asegurar que el directorio de salida existe
+      await fs.ensureDir(path.dirname(outputPath));
+      
       console.log(`Converting: ${inputPath} -> ${outputPath}`);
       
       await sharp(inputPath)
         .jpeg({ 
           quality: this.quality,
-          progressive: true 
+          progressive: true,
+          mozjpeg: true
         })
         .toFile(outputPath);
       
+      // Verificar que el archivo se creó correctamente
+      const stats = await fs.stat(outputPath);
+      if (stats.size === 0) {
+        throw new Error('Output file is empty');
+      }
+      
       console.log(`✅ Successfully converted: ${path.basename(outputPath)}`);
-      return true;
+      return { success: true, outputPath, size: stats.size };
     } catch (error) {
       console.error(`❌ Error converting ${inputPath}:`, error.message);
-      return false;
+      return { success: false, error: error.message };
     }
   }
 
@@ -56,9 +95,10 @@ class HEICConverter {
         const outputFileName = file.replace(/\.(heic|heif)$/i, '.jpg');
         const outputPath = path.join(this.outputDir, outputFileName);
 
-        const success = await this.convertFile(inputPath, outputPath);
-        if (success) {
+        const result = await this.convertFile(inputPath, outputPath);
+        if (result.success) {
           successCount++;
+          console.log(`📊 File size: ${(result.size / 1024 / 1024).toFixed(2)} MB`);
         } else {
           errorCount++;
         }
@@ -76,11 +116,22 @@ class HEICConverter {
 
   async convertSingleFile(inputFile, outputFile) {
     try {
-      await fs.ensureDir(path.dirname(outputFile));
       return await this.convertFile(inputFile, outputFile);
     } catch (error) {
       console.error('💥 Error during single file conversion:', error.message);
-      return false;
+      return { success: false, error: error.message };
+    }
+  }
+
+  // Método para limpiar archivos temporales
+  async cleanupTempFiles(filePaths) {
+    for (const filePath of filePaths) {
+      try {
+        await fs.remove(filePath);
+        console.log(`🗑️ Cleaned up: ${filePath}`);
+      } catch (error) {
+        console.warn(`⚠️ Could not clean up ${filePath}:`, error.message);
+      }
     }
   }
 }
